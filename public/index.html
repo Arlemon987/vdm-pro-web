@@ -29,7 +29,7 @@
         <input 
           type="url" 
           id="videoUrl" 
-          placeholder="Paste YouTube or video link here..." 
+          placeholder="Paste YouTube, TikTok, or video link here..." 
           class="w-full bg-[#0b132b] text-white placeholder-slate-500 rounded-xl px-4 py-3 border border-slate-700 focus:outline-none focus:border-[#00f2fe] transition"
         />
       </div>
@@ -103,9 +103,9 @@
           const secs = data.duration % 60;
           document.getElementById('videoMeta').innerText = `Duration: ${mins}m ${secs}s | Format: ${data.ext.toUpperCase()}`;
 
+          // Route download through backend proxy to eliminate 403 Forbidden
           const downloadBtn = document.getElementById('downloadBtn');
-          downloadBtn.href = data.download_url;
-          downloadBtn.setAttribute('download', `${data.title}.${data.ext}`);
+          downloadBtn.href = `/api/proxy?url=${encodeURIComponent(data.download_url)}`;
 
           previewCard.classList.remove('hidden');
           status.innerText = "✓ Stream ready for download.";
