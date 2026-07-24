@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, Response, stream_with_context
+from flask import Flask, request, jsonify, Response, stream_with_context, redirect
 from flask_cors import CORS
 import yt_dlp
 import os
@@ -167,7 +167,8 @@ def fetch_video():
 @app.route('/api/stream', methods=['GET'])
 def stream_media():
     """
-    Proxies video data stream to prevent cross-origin media blocks and CDNs blocking direct downloads.
+    Proxies video data stream with correct Referer/User-Agent headers to prevent 
+    TikTok/YouTube CDN hotlink blocks and ERR_INVALID_RESPONSE errors on Vercel.
     """
     target_url = request.args.get('url')
     filename = request.args.get('filename', 'video.mp4')
@@ -176,27 +177,45 @@ def stream_media():
         return jsonify({'error': 'Missing media URL'}), 400
 
     try:
+        # Sanitize filename for HTTP header standards (RFC 5987 compliance)
+        safe_filename = re.sub(r'[^\w\.-]', '_', filename).strip('_') or 'video.mp4'
+
+        # Set domain-appropriate Referer header to pass TikTok and YouTube CDN checks
+        referer = 'https://www.tiktok.com/' if any(d in target_url for d in ['tiktok', 'byteoversea', 'ibyteimg']) else 'https://www.youtube.com/'
+
         req_headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36'
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+            'Referer': referer,
+            'Accept': '*/*'
         }
-        
-        r = requests.get(target_url, headers=req_headers, stream=True, timeout=15)
-        
+
+        # Issue stream request to target CDN
+        r = requests.get(target_url, headers=req_headers, stream=True, timeout=12)
+
+        if r.status_code != 200:
+            # Fallback directly to CDN link if proxying returns non-200
+            return redirect(target_url)
+
+        # Generator function for streaming response chunks
         def generate():
-            for chunk in r.iter_content(chunk_size=8192):
+            for chunk in r.iter_content(chunk_size=65536):
                 if chunk:
                     yield chunk
 
-        headers = {
-            'Content-Type': r.headers.get('Content-Type', 'video/mp4'),
-            'Content-Disposition': f'attachment; filename="{filename}"',
-            'Content-Length': r.headers.get('Content-Length', '')
+        content_type = r.headers.get('Content-Type', 'video/mp4')
+
+        # Exclude Content-Length header to prevent HTTP chunked transfer conflicts on Vercel
+        res_headers = {
+            'Content-Type': content_type,
+            'Content-Disposition': f'attachment; filename="{safe_filename}"',
+            'Access-Control-Allow-Origin': '*'
         }
 
-        return Response(stream_with_context(generate()), headers=headers, status=r.status_code)
+        return Response(stream_with_context(generate()), headers=res_headers, status=200)
 
     except Exception as e:
-        return jsonify({'error': f'Failed to stream media: {str(e)}'}), 500
+        print(f"Proxy stream exception: {e}")
+        return redirect(target_url)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
