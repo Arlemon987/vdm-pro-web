@@ -50,7 +50,7 @@
         </div>
         <div>
           <h1 class="font-extrabold text-lg tracking-tight bg-gradient-to-r from-white via-slate-200 to-cyan-400 bg-clip-text text-transparent">
-            IDM PRO <span class="text-xs font-mono font-medium px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">v2.5 FIXED</span>
+            IDM PRO <span class="text-xs font-mono font-medium px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">v2.6 FIXED</span>
           </h1>
           <p class="text-[11px] text-slate-400">Serverless High-Speed Media Engine</p>
         </div>
@@ -131,6 +131,7 @@
       </div>
     </div>
 
+    <!-- Result Display Card -->
     <div id="resultCard" class="hidden glass-card rounded-2xl p-6 border border-slate-700/60 space-y-6">
       <div class="flex flex-col md:flex-row gap-6 items-start">
         <div class="relative w-full md:w-64 h-40 bg-slate-900 rounded-xl overflow-hidden shrink-0 border border-slate-800">
@@ -173,6 +174,7 @@
 
   </main>
 
+  <!-- Cookie Modal -->
   <div id="cookieModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
     <div class="glass-card max-w-xl w-full rounded-2xl p-6 border border-slate-700 space-y-5">
       <div class="flex items-center justify-between border-b border-slate-800 pb-3">
@@ -293,7 +295,16 @@
           body: JSON.stringify({ url: url, quality: quality, cookies: savedCookies })
         });
 
-        const data = await response.json();
+        const contentType = response.headers.get('content-type') || '';
+        let data;
+
+        if (contentType.includes('application/json')) {
+          data = await response.json();
+        } else {
+          const rawText = await response.text();
+          log(`Server error output: ${rawText.slice(0, 150)}`, 'error');
+          throw new Error('Server returned an invalid HTML or text response instead of JSON. Serverless function may have timed out.');
+        }
 
         if (data.success) {
           log(`Success: "${data.title}"`, 'success');
@@ -323,7 +334,7 @@
         }
       } catch (err) {
         log(`Network Exception: ${err.message}`, 'error');
-        document.getElementById('errorText').innerText = "Failed to connect to backend serverless function.";
+        document.getElementById('errorText').innerText = err.message || "Failed to connect to backend serverless function.";
         document.getElementById('errorBox').classList.remove('hidden');
       } finally {
         document.getElementById('statusBox').classList.add('hidden');
