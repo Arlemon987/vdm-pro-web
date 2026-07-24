@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IDM Pro — Web Downloader Engine</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+  </style>
+</head>
+<body class="bg-[#0b132b] text-white min-h-screen flex items-center justify-center p-4">
+
+  <div class="w-full max-w-xl bg-[#1c2541] rounded-2xl shadow-2xl border border-slate-700/50 p-6 space-y-6">
+    
+    <!-- Header -->
+    <div class="border-b border-slate-700/60 pb-4">
+      <h1 class="text-2xl font-bold text-[#00f2fe] flex items-center gap-2">
+        <span>⚡</span> IDM Pro Web Engine
+      </h1>
+      <p class="text-xs text-[#5bc0be] mt-1">Cloud-Powered High-Speed Stream Extractor</p>
+    </div>
+
+    <!-- Input Form -->
+    <div class="space-y-4">
+      <div>
+        <label class="block text-xs font-bold text-[#5bc0be] uppercase tracking-wider mb-2">Video URL</label>
+        <input 
+          type="url" 
+          id="videoUrl" 
+          placeholder="Paste YouTube or video link here..." 
+          class="w-full bg-[#0b132b] text-white placeholder-slate-500 rounded-xl px-4 py-3 border border-slate-700 focus:outline-none focus:border-[#00f2fe] transition"
+        />
+      </div>
+
+      <button 
+        id="fetchBtn" 
+        onclick="handleFetch()" 
+        class="w-full bg-[#00f2fe] hover:bg-[#00c4cc] text-[#0b132b] font-bold py-3.5 rounded-xl shadow-lg shadow-cyan-500/20 transition cursor-pointer"
+      >
+        FETCH VIDEO STREAMS
+      </button>
+    </div>
+
+    <!-- Status Message -->
+    <div id="status" class="hidden text-sm text-center py-2 text-slate-400"></div>
+
+    <!-- Preview & Download Card -->
+    <div id="previewCard" class="hidden bg-[#0b132b] rounded-xl p-4 border border-slate-800 space-y-4">
+      <div class="flex gap-4 items-center">
+        <img id="thumb" class="w-28 h-20 object-cover rounded-lg bg-slate-800" src="" alt="Thumbnail">
+        <div class="flex-1 min-w-0">
+          <h3 id="videoTitle" class="text-sm font-semibold text-white truncate"></h3>
+          <p id="videoMeta" class="text-xs text-[#5bc0be] mt-1"></p>
+        </div>
+      </div>
+
+      <a 
+        id="downloadBtn" 
+        target="_blank" 
+        rel="noopener noreferrer" 
+        class="block w-full text-center bg-[#3a506b] hover:bg-[#486581] text-white font-bold py-3 rounded-xl transition cursor-pointer"
+      >
+        ⬇️ DOWNLOAD DIRECT FILE STREAM
+      </a>
+    </div>
+
+  </div>
+
+  <script>
+    async function handleFetch() {
+      const url = document.getElementById('videoUrl').value.trim();
+      const status = document.getElementById('status');
+      const fetchBtn = document.getElementById('fetchBtn');
+      const previewCard = document.getElementById('previewCard');
+
+      if (!url) {
+        alert('Please paste a video URL first.');
+        return;
+      }
+
+      fetchBtn.disabled = true;
+      fetchBtn.innerText = "Extracting Stream Info...";
+      status.classList.remove('hidden');
+      status.innerText = "Connecting to serverless engine...";
+      previewCard.classList.add('hidden');
+
+      try {
+        const response = await fetch('/api/fetch', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url: url })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          document.getElementById('videoTitle').innerText = data.title;
+          document.getElementById('thumb').src = data.thumbnail;
+          
+          const mins = Math.floor(data.duration / 60);
+          const secs = data.duration % 60;
+          document.getElementById('videoMeta').innerText = `Duration: ${mins}m ${secs}s | Format: ${data.ext.toUpperCase()}`;
+
+          const downloadBtn = document.getElementById('downloadBtn');
+          downloadBtn.href = data.download_url;
+          downloadBtn.setAttribute('download', `${data.title}.${data.ext}`);
+
+          previewCard.classList.remove('hidden');
+          status.innerText = "✓ Stream ready for download.";
+        } else {
+          status.innerText = `❌ Error: ${data.error}`;
+        }
+      } catch (err) {
+        status.innerText = "❌ Failed to reach backend API.";
+      } finally {
+        fetchBtn.disabled = false;
+        fetchBtn.innerText = "FETCH VIDEO STREAMS";
+      }
+    }
+  </script>
+</body>
+</html>
