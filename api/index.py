@@ -10,6 +10,21 @@ import requests
 app = Flask(__name__)
 CORS(app)
 
+@app.route('/', methods=['GET'])
+def home():
+    """
+    Serves the static index.html or health status to guarantee 200 OK on root route.
+    """
+    try:
+        base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        html_path = os.path.join(base_dir, 'public', 'index.html')
+        if os.path.exists(html_path):
+            with open(html_path, 'r', encoding='utf-8') as f:
+                return Response(f.read(), mimetype='text/html')
+    except Exception as e:
+        print(f"Error serving homepage: {e}")
+    return jsonify({'status': 'online', 'message': 'IDM Pro Serverless Engine API'}), 200
+
 def setup_cookies():
     """
     Writes cookies from environment variable to a temporary file for yt-dlp.
