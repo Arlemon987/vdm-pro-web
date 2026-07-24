@@ -1,122 +1,267 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>IDM Pro — Web Downloader Engine</title>
+  <title>IDM Pro — Ultimate Cloud Stream Extractor</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Plus Jakarta Sans', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          }
+        }
+      }
+    }
+  </script>
   <style>
-    body { font-family: 'Inter', sans-serif; }
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background-color: #080d1a;
+      color: #f8fafc;
+    }
+    .glass-card {
+      background: rgba(15, 23, 42, 0.75);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .glass-input {
+      background: rgba(2, 6, 23, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+    }
+    .glow-effect {
+      box-shadow: 0 0 35px -5px rgba(0, 242, 254, 0.25);
+    }
   </style>
 </head>
-<body class="bg-[#0b132b] text-white min-h-screen flex items-center justify-center p-4">
+<body class="min-h-screen flex flex-col justify-between text-slate-100 selection:bg-cyan-500 selection:text-slate-950">
 
-  <div class="w-full max-w-xl bg-[#1c2541] rounded-2xl shadow-2xl border border-slate-700/50 p-6 space-y-6">
-    
-    <!-- Header -->
-    <div class="border-b border-slate-700/60 pb-4">
-      <h1 class="text-2xl font-bold text-[#00f2fe] flex items-center gap-2">
-        <span>⚡</span> IDM Pro Web Engine
-      </h1>
-      <p class="text-xs text-[#5bc0be] mt-1">Cloud-Powered High-Speed Stream Extractor</p>
-    </div>
-
-    <!-- Input Form -->
-    <div class="space-y-4">
-      <div>
-        <label class="block text-xs font-bold text-[#5bc0be] uppercase tracking-wider mb-2">Video URL</label>
-        <input 
-          type="url" 
-          id="videoUrl" 
-          placeholder="Paste YouTube, TikTok, or video link here..." 
-          class="w-full bg-[#0b132b] text-white placeholder-slate-500 rounded-xl px-4 py-3 border border-slate-700 focus:outline-none focus:border-[#00f2fe] transition"
-        />
-      </div>
-
-      <button 
-        id="fetchBtn" 
-        onclick="handleFetch()" 
-        class="w-full bg-[#00f2fe] hover:bg-[#00c4cc] text-[#0b132b] font-bold py-3.5 rounded-xl shadow-lg shadow-cyan-500/20 transition cursor-pointer"
-      >
-        FETCH VIDEO STREAMS
-      </button>
-    </div>
-
-    <!-- Status Message -->
-    <div id="status" class="hidden text-sm text-center py-2 text-slate-400"></div>
-
-    <!-- Preview & Download Card -->
-    <div id="previewCard" class="hidden bg-[#0b132b] rounded-xl p-4 border border-slate-800 space-y-4">
-      <div class="flex gap-4 items-center">
-        <img id="thumb" class="w-28 h-20 object-cover rounded-lg bg-slate-800" src="" alt="Thumbnail">
-        <div class="flex-1 min-w-0">
-          <h3 id="videoTitle" class="text-sm font-semibold text-white truncate"></h3>
-          <p id="videoMeta" class="text-xs text-[#5bc0be] mt-1"></p>
+  <header class="w-full border-b border-slate-800/80 bg-slate-950/60 backdrop-filter blur-md sticky top-0 z-50">
+    <div class="max-w-6xl mx-auto px-4 py-3.5 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center text-slate-950 font-extrabold text-xl shadow-lg shadow-cyan-500/20">
+          <i class="fa-solid font-bold fa-bolt"></i>
+        </div>
+        <div>
+          <h1 class="font-extrabold text-lg tracking-tight bg-gradient-to-r from-white via-slate-200 to-cyan-400 bg-clip-text text-transparent">
+            IDM PRO <span class="text-xs font-mono font-medium px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">v2.5 FIXED</span>
+          </h1>
+          <p class="text-[11px] text-slate-400">Serverless High-Speed Media Engine</p>
         </div>
       </div>
 
-      <a 
-        id="downloadBtn" 
-        target="_blank" 
-        rel="noopener noreferrer" 
-        class="block w-full text-center bg-[#3a506b] hover:bg-[#486581] text-white font-bold py-3 rounded-xl transition cursor-pointer"
-      >
-        ⬇️ DOWNLOAD DIRECT FILE STREAM
-      </a>
+      <div class="flex items-center gap-2">
+        <button onclick="openCookieModal()" class="text-xs font-semibold px-3 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition flex items-center gap-2 border border-slate-700">
+          <i class="fa-solid fa-cookie-bite text-amber-400"></i>
+          <span>Bypass Bot Fix</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-4xl w-full mx-auto px-4 py-10 flex-1 space-y-8">
+
+    <div class="flex flex-wrap items-center justify-center gap-3 text-xs text-slate-400 font-medium">
+      <span class="text-slate-500 uppercase tracking-wider text-[10px] font-bold">Supported:</span>
+      <span class="px-2.5 py-1 rounded-md bg-slate-900 border border-slate-800 flex items-center gap-1.5"><i class="fa-brands fa-youtube text-red-500"></i> YouTube</span>
+      <span class="px-2.5 py-1 rounded-md bg-slate-900 border border-slate-800 flex items-center gap-1.5"><i class="fa-brands fa-tiktok text-pink-400"></i> TikTok</span>
+      <span class="px-2.5 py-1 rounded-md bg-slate-900 border border-slate-800 flex items-center gap-1.5"><i class="fa-brands fa-instagram text-purple-400"></i> Instagram</span>
+      <span class="px-2.5 py-1 rounded-md bg-slate-900 border border-slate-800 flex items-center gap-1.5"><i class="fa-solid fa-globe text-cyan-400"></i> 1000+ Sites</span>
     </div>
 
+    <!-- Downloader Input Box -->
+    <div class="glass-card rounded-2xl p-6 md:p-8 glow-effect space-y-6 relative overflow-hidden">
+      <div class="space-y-2">
+        <label class="block text-xs font-bold text-cyan-400 tracking-wider uppercase flex items-center gap-2">
+          <i class="fa-solid fa-link"></i> Media Target Link
+        </label>
+        
+        <div class="relative flex flex-col md:flex-row gap-2">
+          <input 
+            type="url" 
+            id="videoUrl" 
+            placeholder="Paste YouTube, TikTok, or video URL here..." 
+            class="w-full glass-input text-white placeholder-slate-500 rounded-xl px-4 py-4 focus:outline-none focus:ring-2 focus:ring-cyan-400/50 text-sm font-mono transition"
+            onkeydown="if(event.key==='Enter') handleFetch()"
+          />
+          
+          <select id="qualitySelect" class="glass-input text-xs font-semibold text-slate-200 rounded-xl px-3 py-3.5 focus:outline-none focus:ring-2 focus:ring-cyan-400/50">
+            <option value="best" class="bg-slate-900">⚡ Best (Auto)</option>
+            <option value="hd" class="bg-slate-900">🎥 HD Quality</option>
+            <option value="sd" class="bg-slate-900">📱 Fast/SD</option>
+            <option value="audio" class="bg-slate-900">🎵 Audio Only</option>
+          </select>
+
+          <button 
+            id="fetchBtn" 
+            onclick="handleFetch()" 
+            class="bg-gradient-to-r from-cyan-400 to-blue-500 hover:from-cyan-300 hover:to-blue-400 text-slate-950 font-bold px-6 py-4 rounded-xl shadow-lg shadow-cyan-500/25 transition cursor-pointer flex items-center justify-center gap-2 shrink-0"
+          >
+            <i class="fa-solid fa-download"></i>
+            <span>EXTRACT</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div id="statusBox" class="hidden glass-card rounded-xl p-4 text-sm flex items-center gap-3 border-l-4 border-cyan-400">
+      <div id="spinner" class="animate-spin text-cyan-400 text-lg">
+        <i class="fa-solid fa-circle-notch"></i>
+      </div>
+      <div class="flex-1">
+        <p id="statusMsg" class="font-medium text-slate-200">Connecting to serverless extraction node...</p>
+      </div>
+    </div>
+
+    <!-- Error Alert Box -->
+    <div id="errorBox" class="hidden glass-card rounded-xl p-5 border-l-4 border-red-500 bg-red-950/20 text-sm space-y-3">
+      <div class="flex items-start gap-3">
+        <i class="fa-solid fa-triangle-exclamation text-red-400 text-xl mt-0.5"></i>
+        <div class="flex-1 space-y-1">
+          <h4 class="font-bold text-red-300">Extraction Failed</h4>
+          <p id="errorText" class="text-xs text-slate-300 font-mono break-all"></p>
+        </div>
+      </div>
+    </div>
+
+    <div id="resultCard" class="hidden glass-card rounded-2xl p-6 border border-slate-700/60 space-y-6">
+      <div class="flex flex-col md:flex-row gap-6 items-start">
+        <div class="relative w-full md:w-64 h-40 bg-slate-900 rounded-xl overflow-hidden shrink-0 border border-slate-800">
+          <img id="resThumb" class="w-full h-full object-cover" src="" alt="Thumbnail">
+          <div class="absolute bottom-2 right-2 bg-slate-950/80 px-2 py-0.5 rounded text-[11px] font-mono text-cyan-300" id="resDuration">00:00</div>
+        </div>
+
+        <div class="flex-1 space-y-3 min-w-0 w-full">
+          <div>
+            <span id="resUploader" class="text-xs font-semibold text-cyan-400 uppercase tracking-wider">Creator</span>
+            <h2 id="resTitle" class="text-lg font-bold text-white line-clamp-2 mt-0.5">Video Title</h2>
+          </div>
+
+          <div class="flex items-center gap-4 text-xs text-slate-400 border-y border-slate-800 py-2.5">
+            <div>Format: <span id="resExt" class="font-mono text-slate-200">MP4</span></div>
+            <div>Views: <span id="resViews" class="font-mono text-slate-200">N/A</span></div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+            <a id="directDownloadBtn" target="_blank" rel="noopener noreferrer" class="w-full bg-slate-800 hover:bg-slate-700 text-slate-100 font-bold py-3 px-4 rounded-xl transition flex items-center justify-center gap-2 border border-slate-700 text-xs">
+              <i class="fa-solid fa-external-link"></i> Direct Stream
+            </a>
+            <a id="proxyDownloadBtn" target="_blank" rel="noopener noreferrer" class="w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 text-slate-950 font-bold py-3 px-4 rounded-xl transition flex items-center justify-center gap-2 text-xs shadow-md shadow-cyan-500/20">
+              <i class="fa-solid fa-cloud-arrow-down"></i> Cloud Proxy Download
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Diagnostic Log Console -->
+    <div class="glass-card rounded-xl p-4 text-xs font-mono space-y-2">
+      <div class="flex items-center justify-between text-slate-400 border-b border-slate-800 pb-2">
+        <span class="flex items-center gap-2"><i class="fa-solid fa-terminal text-cyan-400"></i> Logs</span>
+      </div>
+      <div id="logConsole" class="h-24 overflow-y-auto space-y-1 text-slate-400 text-[11px]">
+        <p class="text-slate-500">[System Ready] Initialized worker bridge...</p>
+      </div>
+    </div>
+
+  </main>
+
+  <div id="cookieModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+    <div class="glass-card max-w-xl w-full rounded-2xl p-6 border border-slate-700 space-y-5">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <h3 class="font-bold text-slate-100 flex items-center gap-2">
+          <i class="fa-solid fa-cookie-bite text-amber-400"></i> YouTube Cookie Configuration
+        </h3>
+        <button onclick="closeCookieModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <div class="text-xs text-slate-300 space-y-3 leading-relaxed">
+        <p>To fix YouTube bot blocks on Vercel deployment:</p>
+        <ol class="list-decimal list-inside space-y-2 bg-slate-950/60 p-4 rounded-xl border border-slate-800">
+          <li>Export YouTube cookies using browser extension <strong>"Get cookies.txt LOCALLY"</strong>.</li>
+          <li>Add Environment Variable <code class="text-cyan-400">YT_COOKIES</code> in Vercel project settings.</li>
+          <li>Redeploy your project on Vercel.</li>
+        </ol>
+      </div>
+
+      <div class="flex justify-end pt-2">
+        <button onclick="closeCookieModal()" class="bg-slate-800 text-slate-200 font-bold text-xs px-5 py-2.5 rounded-xl border border-slate-700">Got It</button>
+      </div>
+    </div>
   </div>
 
   <script>
+    function log(msg, type = 'info') {
+      const consoleEl = document.getElementById('logConsole');
+      const time = new Date().toLocaleTimeString();
+      let colorClass = type === 'error' ? 'text-red-400 font-semibold' : (type === 'success' ? 'text-emerald-400' : 'text-slate-400');
+      const p = document.createElement('p');
+      p.className = colorClass;
+      p.innerHTML = `<span class="text-slate-600">[${time}]</span> ${msg}`;
+      consoleEl.appendChild(p);
+      consoleEl.scrollTop = consoleEl.scrollHeight;
+    }
+
+    function openCookieModal() { document.getElementById('cookieModal').classList.remove('hidden'); }
+    function closeCookieModal() { document.getElementById('cookieModal').classList.add('hidden'); }
+
     async function handleFetch() {
-      const url = document.getElementById('videoUrl').value.trim();
-      const status = document.getElementById('status');
-      const fetchBtn = document.getElementById('fetchBtn');
-      const previewCard = document.getElementById('previewCard');
+      const urlInput = document.getElementById('videoUrl');
+      const url = urlInput.value.trim();
+      const quality = document.getElementById('qualitySelect').value;
 
-      if (!url) {
-        alert('Please paste a video URL first.');
-        return;
-      }
+      if (!url) return alert('Please enter a valid video link.');
 
-      fetchBtn.disabled = true;
-      fetchBtn.innerText = "Extracting Stream Info...";
-      status.classList.remove('hidden');
-      status.innerText = "Connecting to serverless engine...";
-      previewCard.classList.add('hidden');
+      document.getElementById('statusBox').classList.remove('hidden');
+      document.getElementById('errorBox').classList.add('hidden');
+      document.getElementById('resultCard').classList.add('hidden');
+
+      log(`Fetching stream metadata for URL...`, 'info');
 
       try {
         const response = await fetch('/api/fetch', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ url: url })
+          body: JSON.stringify({ url: url, quality: quality })
         });
 
         const data = await response.json();
 
         if (data.success) {
-          document.getElementById('videoTitle').innerText = data.title;
-          document.getElementById('thumb').src = data.thumbnail;
+          log(`Success: "${data.title}"`, 'success');
+
+          document.getElementById('resTitle').innerText = data.title;
+          document.getElementById('resUploader').innerText = data.uploader || 'Creator';
+          document.getElementById('resThumb').src = data.thumbnail || 'https://via.placeholder.com/400x225';
           
           const mins = Math.floor(data.duration / 60);
-          const secs = data.duration % 60;
-          document.getElementById('videoMeta').innerText = `Duration: ${mins}m ${secs}s | Format: ${data.ext.toUpperCase()}`;
+          const secs = (data.duration % 60).toString().padStart(2, '0');
+          document.getElementById('resDuration').innerText = data.duration ? `${mins}:${secs}` : 'Live/Unknown';
 
-          // Route download through backend proxy to eliminate 403 Forbidden
-          const downloadBtn = document.getElementById('downloadBtn');
-          downloadBtn.href = `/api/proxy?url=${encodeURIComponent(data.download_url)}`;
+          document.getElementById('resExt').innerText = (data.ext || 'mp4').toUpperCase();
+          document.getElementById('resViews').innerText = data.views ? data.views.toLocaleString() : 'N/A';
 
-          previewCard.classList.remove('hidden');
-          status.innerText = "✓ Stream ready for download.";
+          document.getElementById('directDownloadBtn').href = data.download_url;
+          document.getElementById('proxyDownloadBtn').href = data.proxy_url || data.download_url;
+
+          document.getElementById('resultCard').classList.remove('hidden');
         } else {
-          status.innerText = `❌ Error: ${data.error}`;
+          log(`Error: ${data.error}`, 'error');
+          document.getElementById('errorText').innerText = data.error;
+          document.getElementById('errorBox').classList.remove('hidden');
         }
       } catch (err) {
-        status.innerText = "❌ Failed to reach backend API.";
+        log(`Network Exception: ${err.message}`, 'error');
+        document.getElementById('errorText').innerText = "Failed to connect to backend serverless function.";
+        document.getElementById('errorBox').classList.remove('hidden');
       } finally {
-        fetchBtn.disabled = false;
-        fetchBtn.innerText = "FETCH VIDEO STREAMS";
+        document.getElementById('statusBox').classList.add('hidden');
       }
     }
   </script>
