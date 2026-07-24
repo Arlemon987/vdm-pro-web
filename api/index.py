@@ -14,8 +14,11 @@ BROWSER_HEADERS = {
     'Sec-Fetch-Mode': 'navigate',
 }
 
+# Make the route catch-all so it doesn't matter if the frontend calls /api, /api/, or /api/extract
 @app.route('/api', methods=['GET', 'POST'])
-def extract_video():
+@app.route('/api/', methods=['GET', 'POST'])
+@app.route('/api/<path:path>', methods=['GET', 'POST'])
+def extract_video(path=None):
     url = None
     if request.method == 'POST':
         url = request.json.get('url')
