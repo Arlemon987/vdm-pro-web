@@ -60,6 +60,7 @@
         <button onclick="openCookieModal()" class="text-xs font-semibold px-3 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition flex items-center gap-2 border border-slate-700">
           <i class="fa-solid fa-cookie-bite text-amber-400"></i>
           <span>Bypass Bot Fix</span>
+          <span id="cookieBadge" class="hidden text-[10px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-1.5 py-0.5 rounded-full font-mono">ACTIVE</span>
         </button>
       </div>
     </div>
@@ -176,27 +177,52 @@
     <div class="glass-card max-w-xl w-full rounded-2xl p-6 border border-slate-700 space-y-5">
       <div class="flex items-center justify-between border-b border-slate-800 pb-3">
         <h3 class="font-bold text-slate-100 flex items-center gap-2">
-          <i class="fa-solid fa-cookie-bite text-amber-400"></i> YouTube Cookie Configuration
+          <i class="fa-solid fa-cookie-bite text-amber-400"></i> YouTube Cookie & Bot Bypass
         </h3>
         <button onclick="closeCookieModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
       </div>
 
       <div class="text-xs text-slate-300 space-y-3 leading-relaxed">
-        <p>To fix YouTube bot blocks on Vercel deployment:</p>
-        <ol class="list-decimal list-inside space-y-2 bg-slate-950/60 p-4 rounded-xl border border-slate-800">
-          <li>Export YouTube cookies using browser extension <strong>"Get cookies.txt LOCALLY"</strong>.</li>
-          <li>Add Environment Variable <code class="text-cyan-400">YT_COOKIES</code> in Vercel project settings.</li>
-          <li>Redeploy your project on Vercel.</li>
-        </ol>
+        <p>If YouTube blocks requests with <em>"Sign in to confirm you're not a bot"</em>, paste your YouTube cookies below to bypass immediately without redeploying:</p>
+
+        <textarea 
+          id="cookieTextarea" 
+          rows="5" 
+          placeholder="Paste Netscape cookies.txt content here... (# Netscape HTTP Cookie File)"
+          class="w-full glass-input text-xs font-mono text-slate-200 p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-400/50"
+        ></textarea>
+
+        <div class="flex items-center justify-between">
+          <button onclick="saveCookiesUI()" class="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 text-slate-950 font-bold text-xs px-4 py-2.5 rounded-xl transition flex items-center gap-2">
+            <i class="fa-solid fa-floppy-disk"></i> Save Cookies Locally
+          </button>
+
+          <button onclick="clearCookiesUI()" class="text-slate-400 hover:text-red-400 text-xs font-medium">
+            Clear Saved Cookies
+          </button>
+        </div>
+
+        <div class="border-t border-slate-800/80 pt-3 text-[11px] text-slate-400 space-y-1">
+          <p class="font-bold text-slate-300">How to export cookies in 30 seconds:</p>
+          <ol class="list-decimal list-inside space-y-1 font-mono text-[10px]">
+            <li>Install browser extension <strong>"Get cookies.txt LOCALLY"</strong>.</li>
+            <li>Go to youtube.com while signed in and export cookies.txt.</li>
+            <li>Paste text content into the box above and hit <strong>Save Cookies</strong>.</li>
+          </ol>
+        </div>
       </div>
 
-      <div class="flex justify-end pt-2">
-        <button onclick="closeCookieModal()" class="bg-slate-800 text-slate-200 font-bold text-xs px-5 py-2.5 rounded-xl border border-slate-700">Got It</button>
+      <div class="flex justify-end pt-1">
+        <button onclick="closeCookieModal()" class="bg-slate-800 text-slate-200 font-bold text-xs px-5 py-2 rounded-xl border border-slate-700">Done</button>
       </div>
     </div>
   </div>
 
   <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      checkActiveCookies();
+    });
+
     function log(msg, type = 'info') {
       const consoleEl = document.getElementById('logConsole');
       const time = new Date().toLocaleTimeString();
@@ -208,13 +234,48 @@
       consoleEl.scrollTop = consoleEl.scrollHeight;
     }
 
-    function openCookieModal() { document.getElementById('cookieModal').classList.remove('hidden'); }
+    function openCookieModal() { 
+      const saved = localStorage.getItem('yt_cookies') || '';
+      document.getElementById('cookieTextarea').value = saved;
+      document.getElementById('cookieModal').classList.remove('hidden'); 
+    }
+
     function closeCookieModal() { document.getElementById('cookieModal').classList.add('hidden'); }
+
+    function saveCookiesUI() {
+      const text = document.getElementById('cookieTextarea').value.trim();
+      if (!text) {
+        alert('Please paste cookie content first.');
+        return;
+      }
+      localStorage.setItem('yt_cookies', text);
+      checkActiveCookies();
+      log('Custom YouTube cookies saved to local browser session!', 'success');
+      closeCookieModal();
+    }
+
+    function clearCookiesUI() {
+      localStorage.removeItem('yt_cookies');
+      document.getElementById('cookieTextarea').value = '';
+      checkActiveCookies();
+      log('Cleared saved YouTube cookies.', 'info');
+    }
+
+    function checkActiveCookies() {
+      const saved = localStorage.getItem('yt_cookies');
+      const badge = document.getElementById('cookieBadge');
+      if (saved && saved.length > 20) {
+        badge.classList.remove('hidden');
+      } else {
+        badge.classList.add('hidden');
+      }
+    }
 
     async function handleFetch() {
       const urlInput = document.getElementById('videoUrl');
       const url = urlInput.value.trim();
       const quality = document.getElementById('qualitySelect').value;
+      const savedCookies = localStorage.getItem('yt_cookies') || '';
 
       if (!url) return alert('Please enter a valid video link.');
 
@@ -223,12 +284,13 @@
       document.getElementById('resultCard').classList.add('hidden');
 
       log(`Fetching stream metadata for URL...`, 'info');
+      if (savedCookies) log(`Applying custom user cookies for request...`, 'info');
 
       try {
         const response = await fetch('/api/fetch', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ url: url, quality: quality })
+          body: JSON.stringify({ url: url, quality: quality, cookies: savedCookies })
         });
 
         const data = await response.json();
@@ -247,8 +309,11 @@
           document.getElementById('resExt').innerText = (data.ext || 'mp4').toUpperCase();
           document.getElementById('resViews').innerText = data.views ? data.views.toLocaleString() : 'N/A';
 
-          document.getElementById('directDownloadBtn').href = data.download_url;
-          document.getElementById('proxyDownloadBtn').href = data.proxy_url || data.download_url;
+          const directBtn = document.getElementById('directDownloadBtn');
+          directBtn.href = data.download_url;
+
+          const proxyBtn = document.getElementById('proxyDownloadBtn');
+          proxyBtn.href = data.proxy_url || data.download_url;
 
           document.getElementById('resultCard').classList.remove('hidden');
         } else {
